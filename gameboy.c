@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "gameboy.h"
 
@@ -36,19 +37,64 @@ void gb_init(gameboy_t* gameboy, uint8_t* rom, uint16_t romSize) {
 			gb_mem_write(gameboy, i, 0);
 		}
 	}
+	
+	// Test
+	//gb_mem_write(gameboy, 0xFAAF, 5);
+}
+
+void gb_run(gameboy_t* gameboy) {
+	bool all_implemented = true;
+
+	while (all_implemented) {
+		uint8_t opcode = gb_mem_read(gameboy, gameboy->cpu.pc);
+		gameboy->cpu.pc++;
+		
+		instruction_t instr;
+		
+		if (opcode == 0xcb) {
+			// fetch cb instruction from different array
+			opcode = gb_mem_read(gameboy, gameboy->cpu.pc);
+			gameboy->cpu.pc++;
+			
+			instr = gb_cb_instructions[opcode];
+		}
+		else {
+			instr = gb_base_instructions[opcode];
+		}
+		
+		if (instr.execute == NULL) {
+			printf("OPCODE 0x%02x NOT IMPLEMENTED\n", opcode);
+			all_implemented = false;
+		}
+		else {
+			instr.execute(gameboy);
+		}
+	}
+	
 }
 
 void gb_execute(gameboy_t* gameboy) {
-	uint16_t pc = gameboy->cpu.pc;
+	uint8_t opcode = gb_mem_read(gameboy, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
-	uint8_t opcode = gb_mem_read(gameboy, pc);
 	
-	instruction_t instr = gb_instructions[opcode];
+	instruction_t instr;
 	
-	if (instr.execute == NULL) {
-		printf("OPCODE %d NOT IMPLEMENTED\n", opcode);
+	if (opcode == 0xcb) {
+		// fetch cb instruction from different array
+		opcode = gb_mem_read(gameboy, gameboy->cpu.pc);
+		gameboy->cpu.pc++;
+		
+		instr = gb_cb_instructions[opcode];
 	}
 	else {
+		instr = gb_base_instructions[opcode];
+	}
+	
+	if (instr.execute == NULL) {
+		printf("OPCODE 0x%02x NOT IMPLEMENTED\n", opcode);
+	}
+	else {
+		printf("Executing 0x%02x\n", opcode);
 		instr.execute(gameboy);
 	}
 }
@@ -61,9 +107,63 @@ uint8_t gb_mem_read(gameboy_t* gameboy, uint16_t pos) {
 	return gameboy->memory[pos];
 }
 
+uint8_t gb_read_n(gameboy_t* gameboy) {
+	uint8_t n = gb_mem_read(gameboy, gameboy->cpu.pc);
+	gameboy->cpu.pc++;
+	return n;
+}
+
+uint16_t gb_read_nn(gameboy_t* gameboy) {
+	uint8_t n1 = gb_mem_read(gameboy, gameboy->cpu.pc);
+	gameboy->cpu.pc++;
+	uint8_t n2 = gb_mem_read(gameboy, gameboy->cpu.pc);
+	gameboy->cpu.pc++;
+	
+	return ((uint16_t)n2) << 8 | n1;
+}
+
 void gb_stop(gameboy_t* gameboy) {
 	
 }
+
+void gb_halt(gameboy_t* gameboy) {
+	// TODO
+}
+
+void gb_enable_interrupts(gameboy_t* gameboy) {
+	// TODO
+	// enable interrupts after next instruction
+} 
+
+void gb_disable_interrupts(gameboy_t* gameboy) {
+	// TODO
+	// disable interrupts after next instruction
+}
+
+// ------------------ begin flag setters/getters ------------------
+
+void gb_flag_reset(gameboy_t* gameboy) {
+	gameboy->cpu.f = 0x00;
+}
+
+void gb_flag_set(gameboy_t* gameboy, int pos, bool set) {
+	if (set) {
+		gameboy->cpu.f = gameboy->cpu.f | (0x01 << pos);
+	}
+	else {
+		gameboy->cpu.f = gameboy->cpu.f & ~(0x01 << pos);
+	}
+}
+
+void gb_flag_flip(gameboy_t* gameboy, int pos) {
+	gameboy->cpu.f = gameboy->cpu.f ^ (0x01 << pos);
+}
+
+bool gb_flag_get(gameboy_t gameboy, int pos) {
+	return ((0x01 << pos) & gameboy.cpu.f) != 0;
+}
+
+// ------------------ end flag setters/getters ------------------
 
 void gb_print_registers(gameboy_t gameboy) {
 	cpu_t cpu = gameboy.cpu;
@@ -75,7 +175,12 @@ void gb_print_registers(gameboy_t gameboy) {
 	printf("e: " BINARY_PATTERN "\n", BYTE_TO_BINARY(cpu.e));
 	printf("h: " BINARY_PATTERN "\n", BYTE_TO_BINARY(cpu.h));
 	printf("l: " BINARY_PATTERN "\n", BYTE_TO_BINARY(cpu.l));
-	printf("f: " BINARY_PATTERN "\n", BYTE_TO_BINARY(cpu.f));
+	printf("f: " BINARY_PATTERN " (Z=%d,N=%d,H=%d,C=%d)\n", 
+			BYTE_TO_BINARY(cpu.f), 
+			gb_flag_get(gameboy, GB_FLAG_ZERO), 
+			gb_flag_get(gameboy, GB_FLAG_NEGATIVE), 
+			gb_flag_get(gameboy, GB_FLAG_HALF_CARRY), 
+			gb_flag_get(gameboy, GB_FLAG_CARRY));
 	
 	printf("af: " BINARY_PATTERN "" BINARY_PATTERN "\n", BYTE_TO_BINARY(cpu.af>>8), BYTE_TO_BINARY(cpu.af));
 	printf("bc: " BINARY_PATTERN "" BINARY_PATTERN "\n", BYTE_TO_BINARY(cpu.bc>>8), BYTE_TO_BINARY(cpu.bc));
