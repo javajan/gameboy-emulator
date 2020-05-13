@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS= -Wall
-DEPS = gameboy.h
-OBJ = main.o gameboy.o instructions.o
+CFLAGS= -Wall -lSDL2
+DEPS = gameboy.h util.h memory.h screen.h types.h
+OBJ = main.o gameboy.o instructions.o memory.o screen.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
