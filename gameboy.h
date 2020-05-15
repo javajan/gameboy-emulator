@@ -18,11 +18,8 @@
 extern const instruction_t gb_base_instructions[256];
 extern const instruction_t gb_cb_instructions[256];
 
-void gb_init(gameboy_t*, uint8_t*, uint16_t, uint8_t*, uint16_t);
+gameboy_t gb_init(uint8_t*, uint16_t);
 void gb_stop(gameboy_t*);
-
-void gb_run(gameboy_t*);
-void gb_execute(gameboy_t*);
 
 void gb_flag_reset(gameboy_t* gameboy);
 void gb_flag_set(gameboy_t*, int, bool);

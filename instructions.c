@@ -24,7 +24,7 @@ void NOP(gameboy_t* gameboy) {}
 
 // Loads R1 with immediate value (next value after this instruction)
 void LD_R1_N(gameboy_t* gameboy, uint8_t* r1) {
-	uint8_t n = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
 	*r1 = n;	
 }
@@ -92,7 +92,7 @@ void LD_L_L(gameboy_t* gameboy) { LD_R1_R2(&gameboy->cpu.l, &gameboy->cpu.l); }
 
 // Moves the value in memory at address R2 to R1
 void LD_LOAD_R1_R2(gameboy_t* gameboy, uint8_t* r1, uint16_t r2) {
-	*r1 = gb_mem_read(gameboy->memory, r2);
+	*r1 = gb_mem_read(&gameboy->memory, r2);
 }
 void LD_LOAD_A_HL(gameboy_t* gameboy) { LD_LOAD_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.hl); } // HL
 void LD_LOAD_B_HL(gameboy_t* gameboy) { LD_LOAD_R1_R2(gameboy, &gameboy->cpu.b, gameboy->cpu.hl); }
@@ -107,7 +107,7 @@ void LD_LOAD_A_C_HIGH(gameboy_t* gameboy) { LD_LOAD_R1_R2(gameboy, &gameboy->cpu
 
 // Moves the value of r2 into memory at address r1
 void LD_SAVE_R1_R2(gameboy_t* gameboy, uint16_t r1, uint8_t r2) {
-	gb_mem_write(gameboy->memory, r1, r2);
+	gb_mem_write(&gameboy->memory, r1, r2);
 }
 void LD_SAVE_HL_A(gameboy_t* gameboy) { LD_SAVE_R1_R2(gameboy, gameboy->cpu.hl, gameboy->cpu.a); } // HL
 void LD_SAVE_HL_B(gameboy_t* gameboy) { LD_SAVE_R1_R2(gameboy, gameboy->cpu.hl, gameboy->cpu.b); }
@@ -122,32 +122,32 @@ void LD_SAVE_C_HIGH_A(gameboy_t* gameboy) { LD_SAVE_R1_R2(gameboy, gameboy->cpu.
 
 // Moves the immediate value to memory at address R1
 void LD_SAVE_R1_N(gameboy_t* gameboy, uint16_t r1) {
-	uint8_t n = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
-	gb_mem_write(gameboy->memory, r1, n);
+	gb_mem_write(&gameboy->memory, r1, n);
 }
 void LD_SAVE_HL_N(gameboy_t* gameboy) { LD_SAVE_R1_N(gameboy, gameboy->cpu.hl); } // 0x36
 
 // Loads R1 with the value in memory at address nn
 void LD_LOAD_A_NN(gameboy_t* gameboy) {
-	uint8_t n1 = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n1 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
-	uint8_t n2 = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n2 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
 	
 	uint16_t nn = ((uint16_t)n2) << 8 | n1;
-	gameboy->cpu.a = gb_mem_read(gameboy->memory, nn);
+	gameboy->cpu.a = gb_mem_read(&gameboy->memory, nn);
 }
 
 // Saves R1 in memory at the at address nn
 void LD_SAVE_A_NN(gameboy_t* gameboy) {
-	uint8_t n1 = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n1 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
-	uint8_t n2 = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n2 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
 	
 	uint16_t nn = ((uint16_t)n2) << 8 | n1;
-	gb_mem_write(gameboy->memory, nn, gameboy->cpu.a);
+	gb_mem_write(&gameboy->memory, nn, gameboy->cpu.a);
 }
 
 void LDD_LOAD_A_HL(gameboy_t* gameboy) { LD_LOAD_A_HL(gameboy); gameboy->cpu.hl--; }
@@ -157,22 +157,22 @@ void LDI_SAVE_HL_A(gameboy_t* gameboy) { LD_SAVE_HL_A(gameboy); gameboy->cpu.hl+
 
 // Put A into memory address 0xFF00+n
 void LDH_SAVE_A_N(gameboy_t* gameboy) { 
-	uint16_t n = (uint16_t)gb_mem_read(gameboy->memory, gameboy->cpu.pc) + 0xFF00;
+	uint16_t n = (uint16_t)gb_mem_read(&gameboy->memory, gameboy->cpu.pc) + 0xFF00;
 	gameboy->cpu.pc++;
-	gb_mem_write(gameboy->memory, n, gameboy->cpu.a);
+	gb_mem_write(&gameboy->memory, n, gameboy->cpu.a);
 }
 // Put memory address 0xFF00+n into A
 void LDH_LOAD_A_N(gameboy_t* gameboy) { 
-	uint16_t n = (uint16_t)gb_mem_read(gameboy->memory, gameboy->cpu.pc) + 0xFF00;
+	uint16_t n = (uint16_t)gb_mem_read(&gameboy->memory, gameboy->cpu.pc) + 0xFF00;
 	gameboy->cpu.pc++;
-	gameboy->cpu.a = gb_mem_read(gameboy->memory, n);
+	gameboy->cpu.a = gb_mem_read(&gameboy->memory, n);
 }
 
 // Put nn into r1
 void LD_R1_NN(gameboy_t* gameboy, uint16_t* r1) {
-	uint8_t n1 = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n1 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
-	uint8_t n2 = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n2 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
 	
 	*r1 = ((uint16_t)n2) << 8 | n1;
@@ -190,7 +190,7 @@ void LD_SP_HL(gameboy_t* gameboy) { LD_R1_R2_16Bit(&gameboy->cpu.sp, &gameboy->c
 
 // Put SP + n into HL
 void LDHL_SP_N(gameboy_t* gameboy) {
-	uint16_t n = (uint16_t)(int8_t)gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint16_t n = (uint16_t)(int8_t)gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
 	uint16_t sp = gameboy->cpu.sp;
 	uint16_t sum = sp + n;
@@ -203,21 +203,21 @@ void LDHL_SP_N(gameboy_t* gameboy) {
 }
 // Put Stack Pointer (SP) at address 
 void LD_NN_SP(gameboy_t* gameboy) {
-	uint8_t n1 = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n1 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
-	uint8_t n2 = gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint8_t n2 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
 	
 	uint16_t nn = ((uint16_t)n2) << 8 | n1;
-	gb_mem_write(gameboy->memory, nn, (uint8_t)gameboy->cpu.sp);
-	gb_mem_write(gameboy->memory, nn+1, (uint8_t)(gameboy->cpu.sp >> 8));
+	gb_mem_write(&gameboy->memory, nn, (uint8_t)gameboy->cpu.sp);
+	gb_mem_write(&gameboy->memory, nn+1, (uint8_t)(gameboy->cpu.sp >> 8));
 }
 
 void PUSH(gameboy_t* gameboy, uint16_t r1) {
 	gameboy->cpu.sp -= 2;
 	
-	gb_mem_write(gameboy->memory, gameboy->cpu.sp, (uint8_t)r1);
-	gb_mem_write(gameboy->memory, gameboy->cpu.sp+1, (uint8_t)(r1 >> 8));
+	gb_mem_write(&gameboy->memory, gameboy->cpu.sp, (uint8_t)r1);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.sp+1, (uint8_t)(r1 >> 8));
 }
 void PUSH_AF(gameboy_t* gameboy) { PUSH(gameboy, gameboy->cpu.af); }
 void PUSH_BC(gameboy_t* gameboy) { PUSH(gameboy, gameboy->cpu.bc); }
@@ -225,7 +225,7 @@ void PUSH_DE(gameboy_t* gameboy) { PUSH(gameboy, gameboy->cpu.de); }
 void PUSH_HL(gameboy_t* gameboy) { PUSH(gameboy, gameboy->cpu.hl); }
 
 void POP(gameboy_t* gameboy, uint16_t* r1) {
-	*r1 = ((uint16_t)gb_mem_read(gameboy->memory, gameboy->cpu.sp+1)) << 8 | gb_mem_read(gameboy->memory, gameboy->cpu.sp);
+	*r1 = ((uint16_t)gb_mem_read(&gameboy->memory, gameboy->cpu.sp+1)) << 8 | gb_mem_read(&gameboy->memory, gameboy->cpu.sp);
 	gameboy->cpu.sp += 2;
 }
 void POP_AF(gameboy_t* gameboy) { POP(gameboy, &gameboy->cpu.af); }
@@ -259,8 +259,8 @@ void ADD_A_D(gameboy_t* gameboy) { ADD_R1_R2(gameboy, &gameboy->cpu.a, gameboy->
 void ADD_A_E(gameboy_t* gameboy) { ADD_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.e); };
 void ADD_A_H(gameboy_t* gameboy) { ADD_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.h); };
 void ADD_A_L(gameboy_t* gameboy) { ADD_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.l); };
-void ADD_A_mHL(gameboy_t* gameboy) { ADD_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.hl)); }
-void ADD_A_N(gameboy_t* gameboy) { ADD_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
+void ADD_A_mHL(gameboy_t* gameboy) { ADD_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.hl)); }
+void ADD_A_N(gameboy_t* gameboy) { ADD_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
 
 // Also adds carry bit
 void ADC_R1_R2(gameboy_t* gameboy, uint8_t* r1, uint8_t r2) {
@@ -285,8 +285,8 @@ void ADC_A_D(gameboy_t* gameboy) { ADC_R1_R2(gameboy, &gameboy->cpu.a, gameboy->
 void ADC_A_E(gameboy_t* gameboy) { ADC_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.e); };
 void ADC_A_H(gameboy_t* gameboy) { ADC_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.h); };
 void ADC_A_L(gameboy_t* gameboy) { ADC_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.l); };
-void ADC_A_mHL(gameboy_t* gameboy) { ADC_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.hl)); }
-void ADC_A_N(gameboy_t* gameboy) { ADC_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
+void ADC_A_mHL(gameboy_t* gameboy) { ADC_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.hl)); }
+void ADC_A_N(gameboy_t* gameboy) { ADC_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
 
 // Subtracts r2 from r1
 void SUB_R1_R2(gameboy_t* gameboy, uint8_t* r1, uint8_t r2) {
@@ -308,8 +308,8 @@ void SUB_A_D(gameboy_t* gameboy) { SUB_R1_R2(gameboy, &gameboy->cpu.a, gameboy->
 void SUB_A_E(gameboy_t* gameboy) { SUB_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.e); };
 void SUB_A_H(gameboy_t* gameboy) { SUB_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.h); };
 void SUB_A_L(gameboy_t* gameboy) { SUB_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.l); };
-void SUB_A_mHL(gameboy_t* gameboy) { SUB_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.hl)); }
-void SUB_A_N(gameboy_t* gameboy) { SUB_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
+void SUB_A_mHL(gameboy_t* gameboy) { SUB_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.hl)); }
+void SUB_A_N(gameboy_t* gameboy) { SUB_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
 
 // Also subtracts carry bit
 void SBC_R1_R2(gameboy_t* gameboy, uint8_t* r1, uint8_t r2) {
@@ -335,8 +335,8 @@ void SBC_A_D(gameboy_t* gameboy) { SBC_R1_R2(gameboy, &gameboy->cpu.a, gameboy->
 void SBC_A_E(gameboy_t* gameboy) { SBC_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.e); };
 void SBC_A_H(gameboy_t* gameboy) { SBC_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.h); };
 void SBC_A_L(gameboy_t* gameboy) { SBC_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.l); };
-void SBC_A_mHL(gameboy_t* gameboy) { SBC_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.hl)); }
-void SBC_A_N(gameboy_t* gameboy) { SBC_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
+void SBC_A_mHL(gameboy_t* gameboy) { SBC_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.hl)); }
+void SBC_A_N(gameboy_t* gameboy) { SBC_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
 
 // Adds r2 to r1 for 16 bit registers
 void ADD_R1_R2_16Bit(gameboy_t* gameboy, uint16_t* r1, uint16_t r2) {
@@ -357,7 +357,7 @@ void ADD_HL_DE(gameboy_t* gameboy) { ADD_R1_R2_16Bit(gameboy, &gameboy->cpu.hl, 
 void ADD_HL_SP(gameboy_t* gameboy) { ADD_R1_R2_16Bit(gameboy, &gameboy->cpu.hl, gameboy->cpu.hl); }
 
 void ADD_SP_N(gameboy_t* gameboy) {
-	uint16_t n = (uint16_t)(int8_t)gb_mem_read(gameboy->memory, gameboy->cpu.pc);
+	uint16_t n = (uint16_t)(int8_t)gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
 	gameboy->cpu.pc++;
 	uint16_t sp = gameboy->cpu.sp;
 	uint16_t sum = sp + n;
@@ -390,8 +390,8 @@ void AND_A_D(gameboy_t* gameboy) { AND_R1_R2(gameboy, &gameboy->cpu.a, gameboy->
 void AND_A_E(gameboy_t* gameboy) { AND_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.e); }
 void AND_A_H(gameboy_t* gameboy) { AND_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.h); }
 void AND_A_L(gameboy_t* gameboy) { AND_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.l); }
-void AND_A_mHL(gameboy_t* gameboy) { AND_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.hl)); }
-void AND_A_N(gameboy_t* gameboy) { AND_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
+void AND_A_mHL(gameboy_t* gameboy) { AND_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.hl)); }
+void AND_A_N(gameboy_t* gameboy) { AND_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
 
 // Logical OR operation, stores result in r1, sets zero flag accordingly
 void OR_R1_R2(gameboy_t* gameboy, uint8_t* r1, uint8_t r2) {
@@ -407,8 +407,8 @@ void OR_A_D(gameboy_t* gameboy) { OR_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cp
 void OR_A_E(gameboy_t* gameboy) { OR_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.e); }
 void OR_A_H(gameboy_t* gameboy) { OR_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.h); }
 void OR_A_L(gameboy_t* gameboy) { OR_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.l); }
-void OR_A_mHL(gameboy_t* gameboy) { OR_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.hl)); }
-void OR_A_N(gameboy_t* gameboy) { OR_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
+void OR_A_mHL(gameboy_t* gameboy) { OR_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.hl)); }
+void OR_A_N(gameboy_t* gameboy) { OR_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
 
 // Logical XOR operation, stores result in r1, sets zero flag accordingly
 void XOR_R1_R2(gameboy_t* gameboy, uint8_t* r1, uint8_t r2) {
@@ -424,8 +424,8 @@ void XOR_A_D(gameboy_t* gameboy) { XOR_R1_R2(gameboy, &gameboy->cpu.a, gameboy->
 void XOR_A_E(gameboy_t* gameboy) { XOR_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.e); }
 void XOR_A_H(gameboy_t* gameboy) { XOR_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.h); }
 void XOR_A_L(gameboy_t* gameboy) { XOR_R1_R2(gameboy, &gameboy->cpu.a, gameboy->cpu.l); }
-void XOR_A_mHL(gameboy_t* gameboy) { XOR_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.hl)); }
-void XOR_A_N(gameboy_t* gameboy) { XOR_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
+void XOR_A_mHL(gameboy_t* gameboy) { XOR_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.hl)); }
+void XOR_A_N(gameboy_t* gameboy) { XOR_R1_R2(gameboy, &gameboy->cpu.a, gb_mem_read(&gameboy->memory, gameboy->cpu.pc)); gameboy->cpu.pc++; }
 
 
 
@@ -462,9 +462,9 @@ void INC_E(gameboy_t* gameboy) { INC(gameboy, &gameboy->cpu.e); }
 void INC_H(gameboy_t* gameboy) { INC(gameboy, &gameboy->cpu.h); }
 void INC_L(gameboy_t* gameboy) { INC(gameboy, &gameboy->cpu.l); }
 void INC_mHL(gameboy_t* gameboy) { 
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	INC(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 
 void DEC(gameboy_t* gameboy, uint8_t* r1) {
@@ -485,9 +485,9 @@ void DEC_E(gameboy_t* gameboy) { DEC(gameboy, &gameboy->cpu.e); }
 void DEC_H(gameboy_t* gameboy) { DEC(gameboy, &gameboy->cpu.h); }
 void DEC_L(gameboy_t* gameboy) { DEC(gameboy, &gameboy->cpu.l); }
 void DEC_mHL(gameboy_t* gameboy) { 
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	DEC(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 
 void INC16Bit(gameboy_t* gameboy, uint16_t* r1) {
@@ -1024,7 +1024,7 @@ void BIT_D_0(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.d, 0); }
 void BIT_E_0(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.e, 0); }
 void BIT_H_0(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.h, 0); }
 void BIT_L_0(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.l, 0); }
-void BIT_mHL_0(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(gameboy->memory, gameboy->cpu.hl), 0); }
+void BIT_mHL_0(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(&gameboy->memory, gameboy->cpu.hl), 0); }
 void BIT_A_0(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.a, 0); }
 
 void BIT_B_1(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.b, 1); }
@@ -1033,7 +1033,7 @@ void BIT_D_1(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.d, 1); }
 void BIT_E_1(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.e, 1); }
 void BIT_H_1(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.h, 1); }
 void BIT_L_1(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.l, 1); }
-void BIT_mHL_1(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(gameboy->memory, gameboy->cpu.hl), 1); }
+void BIT_mHL_1(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(&gameboy->memory, gameboy->cpu.hl), 1); }
 void BIT_A_1(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.a, 1); }
 
 void BIT_B_2(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.b, 2); }
@@ -1042,7 +1042,7 @@ void BIT_D_2(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.d, 2); }
 void BIT_E_2(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.e, 2); }
 void BIT_H_2(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.h, 2); }
 void BIT_L_2(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.l, 2); }
-void BIT_mHL_2(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(gameboy->memory, gameboy->cpu.hl), 2); }
+void BIT_mHL_2(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(&gameboy->memory, gameboy->cpu.hl), 2); }
 void BIT_A_2(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.a, 2); }
 
 void BIT_B_3(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.b, 3); }
@@ -1051,7 +1051,7 @@ void BIT_D_3(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.d, 3); }
 void BIT_E_3(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.e, 3); }
 void BIT_H_3(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.h, 3); }
 void BIT_L_3(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.l, 3); }
-void BIT_mHL_3(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(gameboy->memory, gameboy->cpu.hl), 3); }
+void BIT_mHL_3(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(&gameboy->memory, gameboy->cpu.hl), 3); }
 void BIT_A_3(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.a, 3); }
 
 void BIT_B_4(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.b, 4); }
@@ -1060,7 +1060,7 @@ void BIT_D_4(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.d, 4); }
 void BIT_E_4(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.e, 4); }
 void BIT_H_4(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.h, 4); }
 void BIT_L_4(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.l, 4); }
-void BIT_mHL_4(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(gameboy->memory, gameboy->cpu.hl), 4); }
+void BIT_mHL_4(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(&gameboy->memory, gameboy->cpu.hl), 4); }
 void BIT_A_4(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.a, 4); }
 
 void BIT_B_5(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.b, 5); }
@@ -1069,7 +1069,7 @@ void BIT_D_5(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.d, 5); }
 void BIT_E_5(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.e, 5); }
 void BIT_H_5(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.h, 5); }
 void BIT_L_5(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.l, 5); }
-void BIT_mHL_5(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(gameboy->memory, gameboy->cpu.hl), 5); }
+void BIT_mHL_5(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(&gameboy->memory, gameboy->cpu.hl), 5); }
 void BIT_A_5(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.a, 5); }
 
 void BIT_B_6(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.b, 6); }
@@ -1078,7 +1078,7 @@ void BIT_D_6(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.d, 6); }
 void BIT_E_6(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.e, 6); }
 void BIT_H_6(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.h, 6); }
 void BIT_L_6(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.l, 6); }
-void BIT_mHL_6(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(gameboy->memory, gameboy->cpu.hl), 6); }
+void BIT_mHL_6(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(&gameboy->memory, gameboy->cpu.hl), 6); }
 void BIT_A_6(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.a, 6); }
 
 void BIT_B_7(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.b, 7); }
@@ -1087,7 +1087,7 @@ void BIT_D_7(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.d, 7); }
 void BIT_E_7(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.e, 7); }
 void BIT_H_7(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.h, 7); }
 void BIT_L_7(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.l, 7); }
-void BIT_mHL_7(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(gameboy->memory, gameboy->cpu.hl), 7); }
+void BIT_mHL_7(gameboy_t* gameboy) { BIT(gameboy, gb_mem_read(&gameboy->memory, gameboy->cpu.hl), 7); }
 void BIT_A_7(gameboy_t* gameboy) { BIT(gameboy, gameboy->cpu.a, 7); }
 
 
@@ -1105,7 +1105,7 @@ void RES_D_0(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.d, 0); }
 void RES_E_0(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.e, 0); }
 void RES_H_0(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.h, 0); }
 void RES_L_0(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.l, 0); }
-void RES_mHL_0(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 0); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void RES_mHL_0(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 0); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void RES_A_0(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.a, 0); }
 
 void RES_B_1(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.b, 1); }
@@ -1114,7 +1114,7 @@ void RES_D_1(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.d, 1); }
 void RES_E_1(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.e, 1); }
 void RES_H_1(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.h, 1); }
 void RES_L_1(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.l, 1); }
-void RES_mHL_1(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 1); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void RES_mHL_1(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 1); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void RES_A_1(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.a, 1); }
 
 void RES_B_2(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.b, 2); }
@@ -1123,7 +1123,7 @@ void RES_D_2(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.d, 2); }
 void RES_E_2(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.e, 2); }
 void RES_H_2(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.h, 2); }
 void RES_L_2(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.l, 2); }
-void RES_mHL_2(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 2); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void RES_mHL_2(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 2); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void RES_A_2(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.a, 2); }
 
 void RES_B_3(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.b, 3); }
@@ -1132,7 +1132,7 @@ void RES_D_3(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.d, 3); }
 void RES_E_3(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.e, 3); }
 void RES_H_3(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.h, 3); }
 void RES_L_3(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.l, 3); }
-void RES_mHL_3(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 3); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void RES_mHL_3(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 3); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void RES_A_3(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.a, 3); }
 
 void RES_B_4(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.b, 4); }
@@ -1141,7 +1141,7 @@ void RES_D_4(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.d, 4); }
 void RES_E_4(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.e, 4); }
 void RES_H_4(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.h, 4); }
 void RES_L_4(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.l, 4); }
-void RES_mHL_4(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 4); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void RES_mHL_4(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 4); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void RES_A_4(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.a, 4); }
 
 void RES_B_5(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.b, 5); }
@@ -1150,7 +1150,7 @@ void RES_D_5(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.d, 5); }
 void RES_E_5(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.e, 5); }
 void RES_H_5(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.h, 5); }
 void RES_L_5(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.l, 5); }
-void RES_mHL_5(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 5); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void RES_mHL_5(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 5); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void RES_A_5(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.a, 5); }
 
 void RES_B_6(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.b, 6); }
@@ -1159,7 +1159,7 @@ void RES_D_6(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.d, 6); }
 void RES_E_6(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.e, 6); }
 void RES_H_6(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.h, 6); }
 void RES_L_6(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.l, 6); }
-void RES_mHL_6(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 6); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void RES_mHL_6(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 6); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void RES_A_6(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.a, 6); }
 
 void RES_B_7(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.b, 7); }
@@ -1168,7 +1168,7 @@ void RES_D_7(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.d, 7); }
 void RES_E_7(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.e, 7); }
 void RES_H_7(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.h, 7); }
 void RES_L_7(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.l, 7); }
-void RES_mHL_7(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 7); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void RES_mHL_7(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); RES(gameboy, &val, 7); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void RES_A_7(gameboy_t* gameboy) { RES(gameboy, &gameboy->cpu.a, 7); }
 
 
@@ -1186,7 +1186,7 @@ void SET_D_0(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.d, 0); }
 void SET_E_0(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.e, 0); }
 void SET_H_0(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.h, 0); }
 void SET_L_0(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.l, 0); }
-void SET_mHL_0(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 0); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void SET_mHL_0(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 0); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void SET_A_0(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.a, 0); }
 
 void SET_B_1(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.b, 1); }
@@ -1195,7 +1195,7 @@ void SET_D_1(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.d, 1); }
 void SET_E_1(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.e, 1); }
 void SET_H_1(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.h, 1); }
 void SET_L_1(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.l, 1); }
-void SET_mHL_1(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 1); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void SET_mHL_1(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 1); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void SET_A_1(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.a, 1); }
 
 void SET_B_2(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.b, 2); }
@@ -1204,7 +1204,7 @@ void SET_D_2(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.d, 2); }
 void SET_E_2(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.e, 2); }
 void SET_H_2(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.h, 2); }
 void SET_L_2(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.l, 2); }
-void SET_mHL_2(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 2); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void SET_mHL_2(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 2); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void SET_A_2(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.a, 2); }
 
 void SET_B_3(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.b, 3); }
@@ -1213,7 +1213,7 @@ void SET_D_3(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.d, 3); }
 void SET_E_3(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.e, 3); }
 void SET_H_3(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.h, 3); }
 void SET_L_3(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.l, 3); }
-void SET_mHL_3(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 3); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void SET_mHL_3(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 3); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void SET_A_3(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.a, 3); }
 
 void SET_B_4(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.b, 4); }
@@ -1222,7 +1222,7 @@ void SET_D_4(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.d, 4); }
 void SET_E_4(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.e, 4); }
 void SET_H_4(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.h, 4); }
 void SET_L_4(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.l, 4); }
-void SET_mHL_4(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 4); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void SET_mHL_4(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 4); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void SET_A_4(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.a, 4); }
 
 void SET_B_5(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.b, 5); }
@@ -1231,7 +1231,7 @@ void SET_D_5(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.d, 5); }
 void SET_E_5(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.e, 5); }
 void SET_H_5(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.h, 5); }
 void SET_L_5(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.l, 5); }
-void SET_mHL_5(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 5); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void SET_mHL_5(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 5); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void SET_A_5(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.a, 5); }
 
 void SET_B_6(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.b, 6); }
@@ -1240,7 +1240,7 @@ void SET_D_6(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.d, 6); }
 void SET_E_6(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.e, 6); }
 void SET_H_6(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.h, 6); }
 void SET_L_6(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.l, 6); }
-void SET_mHL_6(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 6); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void SET_mHL_6(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 6); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void SET_A_6(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.a, 6); }
 
 void SET_B_7(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.b, 7); }
@@ -1249,7 +1249,7 @@ void SET_D_7(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.d, 7); }
 void SET_E_7(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.e, 7); }
 void SET_H_7(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.h, 7); }
 void SET_L_7(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.l, 7); }
-void SET_mHL_7(gameboy_t* gameboy) { uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 7); gb_mem_write(gameboy->memory, gameboy->cpu.hl, val); }
+void SET_mHL_7(gameboy_t* gameboy) { uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl); SET(gameboy, &val, 7); gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val); }
 void SET_A_7(gameboy_t* gameboy) { SET(gameboy, &gameboy->cpu.a, 7); }
 
 
@@ -1278,9 +1278,9 @@ void RLC_E(gameboy_t* gameboy) { RLC_VAL(gameboy, &gameboy->cpu.e); }
 void RLC_H(gameboy_t* gameboy) { RLC_VAL(gameboy, &gameboy->cpu.h); }
 void RLC_L(gameboy_t* gameboy) { RLC_VAL(gameboy, &gameboy->cpu.l); }
 void RLC_mHL(gameboy_t* gameboy) { 
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	RLC_VAL(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 void RLC_A(gameboy_t* gameboy) { RLC_VAL(gameboy, &gameboy->cpu.a); }
 
@@ -1302,9 +1302,9 @@ void RRC_E(gameboy_t* gameboy) { RRC_VAL(gameboy, &gameboy->cpu.e); }
 void RRC_H(gameboy_t* gameboy) { RRC_VAL(gameboy, &gameboy->cpu.h); }
 void RRC_L(gameboy_t* gameboy) { RRC_VAL(gameboy, &gameboy->cpu.l); }
 void RRC_mHL(gameboy_t* gameboy) { 
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	RRC_VAL(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 void RRC_A(gameboy_t* gameboy) { RRC_VAL(gameboy, &gameboy->cpu.a); }
 
@@ -1326,9 +1326,9 @@ void RL_E(gameboy_t* gameboy) { RL_VAL(gameboy, &gameboy->cpu.e); }
 void RL_H(gameboy_t* gameboy) { RL_VAL(gameboy, &gameboy->cpu.h); }
 void RL_L(gameboy_t* gameboy) { RL_VAL(gameboy, &gameboy->cpu.l); }
 void RL_mHL(gameboy_t* gameboy) { 
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	RL_VAL(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 void RL_A(gameboy_t* gameboy) { RL_VAL(gameboy, &gameboy->cpu.a); }
 
@@ -1349,9 +1349,9 @@ void RR_E(gameboy_t* gameboy) { RR_VAL(gameboy, &gameboy->cpu.e); }
 void RR_H(gameboy_t* gameboy) { RR_VAL(gameboy, &gameboy->cpu.h); }
 void RR_L(gameboy_t* gameboy) { RR_VAL(gameboy, &gameboy->cpu.l); }
 void RR_mHL(gameboy_t* gameboy) { 
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	RR_VAL(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 void RR_A(gameboy_t* gameboy) { RR_VAL(gameboy, &gameboy->cpu.a); }
 
@@ -1381,9 +1381,9 @@ void SLA_E(gameboy_t* gameboy) { SLA_VAL(gameboy, &gameboy->cpu.e); }
 void SLA_H(gameboy_t* gameboy) { SLA_VAL(gameboy, &gameboy->cpu.h); }
 void SLA_L(gameboy_t* gameboy) { SLA_VAL(gameboy, &gameboy->cpu.l); }
 void SLA_mHL(gameboy_t* gameboy) {
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	SLA_VAL(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 void SLA_A(gameboy_t* gameboy) { SLA_VAL(gameboy, &gameboy->cpu.a); }
 
@@ -1406,9 +1406,9 @@ void SRA_E(gameboy_t* gameboy) { SRA_VAL(gameboy, &gameboy->cpu.e); }
 void SRA_H(gameboy_t* gameboy) { SRA_VAL(gameboy, &gameboy->cpu.h); }
 void SRA_L(gameboy_t* gameboy) { SRA_VAL(gameboy, &gameboy->cpu.l); }
 void SRA_mHL(gameboy_t* gameboy) {
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	SRA_VAL(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 void SRA_A(gameboy_t* gameboy) { SRA_VAL(gameboy, &gameboy->cpu.a); }
 
@@ -1430,9 +1430,9 @@ void SRL_E(gameboy_t* gameboy) { SRL_VAL(gameboy, &gameboy->cpu.e); }
 void SRL_H(gameboy_t* gameboy) { SRL_VAL(gameboy, &gameboy->cpu.h); }
 void SRL_L(gameboy_t* gameboy) { SRL_VAL(gameboy, &gameboy->cpu.l); }
 void SRL_mHL(gameboy_t* gameboy) {
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	SRL_VAL(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 void SRL_A(gameboy_t* gameboy) { SRL_VAL(gameboy, &gameboy->cpu.a); }
 
@@ -1458,9 +1458,9 @@ void SWAP_E(gameboy_t* gameboy) { SWAP_VAL(gameboy, &gameboy->cpu.e); }
 void SWAP_H(gameboy_t* gameboy) { SWAP_VAL(gameboy, &gameboy->cpu.h); }
 void SWAP_L(gameboy_t* gameboy) { SWAP_VAL(gameboy, &gameboy->cpu.l); }
 void SWAP_mHL(gameboy_t* gameboy) {
-	uint8_t val = gb_mem_read(gameboy->memory, gameboy->cpu.hl);
+	uint8_t val = gb_mem_read(&gameboy->memory, gameboy->cpu.hl);
 	SWAP_VAL(gameboy, &val);
-	gb_mem_write(gameboy->memory, gameboy->cpu.hl, val);
+	gb_mem_write(&gameboy->memory, gameboy->cpu.hl, val);
 }
 void SWAP_A(gameboy_t* gameboy) { SWAP_VAL(gameboy, &gameboy->cpu.a); }
 

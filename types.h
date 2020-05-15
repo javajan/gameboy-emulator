@@ -1,7 +1,7 @@
 #ifndef GB_TYPESH
 #define GB_TYPESH
 
-#include <SDL2/SDL.h>
+#include <stdint.h>
 
 #define MEMORY_SIZE_BIOS 0x100  // 256 bytes
 #define MEMORY_SIZE_ROM  0x8000 // 32k bytes
@@ -20,7 +20,7 @@ typedef struct {
 	uint8_t zram[MEMORY_SIZE_ZRAM];		// zero page
 	uint8_t oam[MEMORY_SIZE_OAM];		// object attribute memory (should be in gpu, but here for now)
 	
-	bool inBios;
+	bool biosActive;
 } memory_t;
 
 typedef struct {
@@ -59,21 +59,20 @@ typedef struct {
 
 #define GB_SCREEN_WIDTH 160
 #define GB_SCREEN_HEIGHT 144
-#define GB_SCREEN_SCALE_FACTOR 2
+#define GB_SCREEN_SCALE_FACTOR 3
 
 typedef struct {
-	SDL_Window* win;
-	SDL_Renderer* renderer;
-	
 	int mode;
 	int modeClock;
 	int line;
+
+	uint8_t pixels[GB_SCREEN_WIDTH*GB_SCREEN_HEIGHT];
 } screen_t;
 
 typedef struct {
 	cpu_t cpu;
 	screen_t screen;
-	memory_t* memory;
+	memory_t memory;
 
 	bool inDebugMode;
 	bool quit;

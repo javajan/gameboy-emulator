@@ -6,7 +6,7 @@
 
 #include "types.h"
 
-void gb_init_memory(memory_t*, uint8_t*, uint16_t, uint8_t*, uint16_t);
+memory_t gb_init_memory(uint8_t*, uint16_t);
 
 void gb_mem_write(memory_t*, uint16_t, uint8_t);
 uint8_t gb_mem_read(memory_t*, uint16_t);
