@@ -6,14 +6,7 @@
 
 #include "types.h"
 
-#define GB_INT_FLAG 0xFF0F
-
-#define GB_INT_VBLANK 	0x01
-#define GB_INT_LCD 		0x02
-#define GB_INT_TIMER 	0x03
-#define GB_INT_SERIAL 	0x04
-#define GB_INT_JOYPAD 	0x05
-
+#define GB_REGISTER_JOYP 0xFF00
 
 memory_t gb_init_memory(uint8_t*, uint16_t);
 

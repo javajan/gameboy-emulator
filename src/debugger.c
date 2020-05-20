@@ -1,90 +1,43 @@
+
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
-#include "gameboy.h"
-#include "screen.h"
+#include "debugger.h"
 #include "util.h"
 
-gameboy_t gb_init(uint8_t* game, uint16_t gameRomSize) {
-	gameboy_t gameboy;
+void gb_debug(gameboy_t* gameboy) {
+	bool executeNextInstruction = false;
+
+	gb_print_registers(*gameboy);
+	gb_print_disassembly(*gameboy, gameboy->cpu.pc, 7);
 	
-	gameboy.inDebugMode = false;
-	gameboy.quit = false;
-	
-	gameboy.cpu.a = 0x00;
-	gameboy.cpu.b = 0x00;
-	gameboy.cpu.c = 0x00;
-	gameboy.cpu.d = 0x00;
-	gameboy.cpu.e = 0x00;
-	gameboy.cpu.h = 0x00;
-	gameboy.cpu.l = 0x00;
-	gameboy.cpu.f = 0x00;
-	
-	gameboy.cpu.sp = 0xFFFE;
-	gameboy.cpu.pc = 0x000;
-	
-	gameboy.memory = gb_init_memory(game, gameRomSize);
-	gameboy.screen = gb_screen_init();
-	
-	return gameboy;
-}
-
-void gb_stop(gameboy_t* gameboy) {
-	
-}
-
-void gb_halt(gameboy_t* gameboy) {
-	// TODO
-}
-
-void gb_enable_interrupts(gameboy_t* gameboy) {
-	// TODO enable interrupts after next instruction
-} 
-
-void gb_disable_interrupts(gameboy_t* gameboy) {
-	// TODO disable interrupts after next instruction
-}
-
-uint8_t gb_read_n(gameboy_t* gameboy) {
-	uint8_t n = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
-	gameboy->cpu.pc++;
-	return n;
-}
-
-uint16_t gb_read_nn(gameboy_t* gameboy) {
-	uint8_t n1 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
-	gameboy->cpu.pc++;
-	uint8_t n2 = gb_mem_read(&gameboy->memory, gameboy->cpu.pc);
-	gameboy->cpu.pc++;
-	
-	return ((uint16_t)n2) << 8 | n1;
-}
-
-// ------------------ begin flag setters/getters ------------------
-
-void gb_flag_reset(gameboy_t* gameboy) {
-	gameboy->cpu.f = 0x00;
-}
-
-void gb_flag_set(gameboy_t* gameboy, int pos, bool set) {
-	if (set) {
-		gameboy->cpu.f = gameboy->cpu.f | (0x01 << pos);
-	}
-	else {
-		gameboy->cpu.f = gameboy->cpu.f & ~(0x01 << pos);
+	while(!executeNextInstruction) {
+		puts("Please enter a command: ");
+		char input = getchar();
+		getchar(); // consumes \n
+		
+		if (input == 'n') {
+			executeNextInstruction = true;
+		}
+		else if(input == 'c') {
+			gameboy->inDebugMode = false;
+			executeNextInstruction = true;
+		}
+		else if(input == 's') {
+			gb_print_stack(gameboy, 4, 4);
+		}
+		else if (input == 'q') {
+			gameboy->quit = true;
+			gameboy->inDebugMode = false;
+			executeNextInstruction = true;
+		}
+		else {
+			printf("Unkown command '%c', try again.\n", input);
+		}
 	}
 }
-
-void gb_flag_flip(gameboy_t* gameboy, int pos) {
-	gameboy->cpu.f = gameboy->cpu.f ^ (0x01 << pos);
-}
-
-bool gb_flag_get(gameboy_t gameboy, int pos) {
-	return ((0x01 << pos) & gameboy.cpu.f) != 0;
-}
-
-// ------------------ end flag setters/getters ------------------
 
 void gb_print_disassembly(gameboy_t gameboy, uint16_t start, uint16_t count) {
 	uint16_t pc = start;
@@ -140,6 +93,10 @@ void gb_print_disassembly(gameboy_t gameboy, uint16_t start, uint16_t count) {
 void gb_print_registers(gameboy_t gameboy) {
 	cpu_t cpu = gameboy.cpu;
 	
+	printf("ime: " BINARY_PATTERN "\n", BYTE_TO_BINARY(cpu.ime));
+	printf("ie:  " BINARY_PATTERN "\n", BYTE_TO_BINARY(gameboy.memory.ienable));
+	printf("if:  " BINARY_PATTERN "\n", BYTE_TO_BINARY(gameboy.memory.iflag));
+	
 	printf("a: " BINARY_PATTERN " (%02x) \n", BYTE_TO_BINARY(cpu.a), cpu.a);
 	printf("b: " BINARY_PATTERN " (%02x) \n", BYTE_TO_BINARY(cpu.b), cpu.b);
 	printf("c: " BINARY_PATTERN " (%02x) \n", BYTE_TO_BINARY(cpu.c), cpu.c);
@@ -161,4 +118,16 @@ void gb_print_registers(gameboy_t gameboy) {
 	
 	printf("sp: " BINARY_PATTERN "" BINARY_PATTERN " (%04x)\n", BYTE_TO_BINARY(cpu.sp>>8), BYTE_TO_BINARY(cpu.sp), cpu.sp);
 	printf("pc: " BINARY_PATTERN "" BINARY_PATTERN " (%04x)\n", BYTE_TO_BINARY(cpu.pc>>8), BYTE_TO_BINARY(cpu.pc), cpu.pc);
+}
+
+void gb_print_stack(gameboy_t* gameboy, uint16_t before, uint16_t after) {
+	uint16_t sp = gameboy->cpu.sp;
+	
+	for (int i=sp+before; i>sp-after; i--) {
+		printf("%04x: \t%02x", i & 0xFFFF, gb_mem_read(&gameboy->memory, i));
+		if (i == sp) {
+			printf("\t<--------- SP");
+		}
+		printf("\n");
+	}
 }

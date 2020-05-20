@@ -782,14 +782,12 @@ void RET_NC(gameboy_t* gameboy) {
 }
 
 void RETI(gameboy_t* gameboy) {
-	RET(gameboy);
 	gb_enable_interrupts(gameboy);
+	RET(gameboy);
 }
 
 // Save current pc and jump to address
 void RST(gameboy_t* gameboy, uint16_t addr) {
-	gb_disable_interrupts(gameboy);
-
 	PUSH(gameboy, gameboy->cpu.pc);
 	gameboy->cpu.pc = addr;
 }
@@ -801,8 +799,14 @@ void RST_20(gameboy_t* gameboy) { RST(gameboy, 0x20); }
 void RST_28(gameboy_t* gameboy) { RST(gameboy, 0x28); }
 void RST_30(gameboy_t* gameboy) { RST(gameboy, 0x30); }
 void RST_38(gameboy_t* gameboy) { RST(gameboy, 0x38); }
-void RST_40(gameboy_t* gameboy) { RST(gameboy, 0x40); }
 
+void INT(gameboy_t* gameboy, uint16_t addr) {
+	gb_disable_interrupts(gameboy);
+
+	PUSH(gameboy, gameboy->cpu.pc);
+	gameboy->cpu.pc = addr;
+	
+}
 
 const instruction_t gb_base_instructions[256] = {
 	{ "NOP", 0, 0, NOP }, 						// 0x00

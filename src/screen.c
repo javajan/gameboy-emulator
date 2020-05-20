@@ -3,6 +3,7 @@
 #include "screen.h"
 #include "memory.h"
 #include "util.h"
+#include "interrupts.h"
 
 screen_t gb_screen_init() {
 	screen_t screen;
@@ -73,10 +74,10 @@ void gb_screen_scanline(screen_t* screen, memory_t* memory) {
 
 
 // Correctly times the time it takes to render with the cpu clocks
-void gb_screen_update(screen_t* screen, memory_t* memory) {
+void gb_screen_update(screen_t* screen, memory_t* memory, uint8_t cycles) {
 	
 	//TODO use actual clock time
-	screen->modeClock += 4;
+	screen->modeClock += cycles;
 	
 	switch (screen->mode)
 	{
@@ -92,7 +93,7 @@ void gb_screen_update(screen_t* screen, memory_t* memory) {
 					screen->mode = 1;
 					
 					// vblank interrupt
-					gb_mem_write(memory, GB_INT_FLAG, gb_mem_read(memory, GB_INT_FLAG) | GB_INT_VBLANK);
+					gb_interrupt_request(memory, GB_INT_VBLANK);
 				}
 				else {
 					screen->mode = 2;

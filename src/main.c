@@ -15,10 +15,14 @@
 #include "memory.h"
 #include "screen.h"
 #include "instructions.h"
+#include "debugger.h"
+#include "interrupts.h"
+#include "joypad.h"
+#include "util.h"
 
 int main() {
-	// read game rom
-	FILE* game = fopen("roms/test_roms/02-interrupts.gb", "r");
+	// Read game rom
+	FILE* game = fopen("roms/Tetris.gb", "r");
 	fseek(game, 0, SEEK_END);
 	uint16_t rom_size = ftell(game);
 	rewind(game);
@@ -42,6 +46,7 @@ int main() {
 										GB_SCREEN_HEIGHT*GB_SCREEN_SCALE_FACTOR, 
 										SDL_WINDOW_SHOWN);
 	SDL_Renderer *renderer= SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
+	
 	SDL_RenderSetLogicalSize(renderer, GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT);
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	SDL_RenderClear(renderer);
@@ -51,83 +56,34 @@ int main() {
 	
 	// Init gameboy
 	gameboy_t gameboy = gb_init(rom, rom_size);
-	//gameboy.inDebugMode = true;
-	//gameboy.cpu.pc = 0x100;
 	
 	bool canContinue = true;
 	while (canContinue && !gameboy.quit) {
 		
-		if (gameboy.cpu.ime == 1 && gameboy.memory.ienable && gameboy.memory.iflag) {
-			uint8_t interrupt = gameboy.memory.ienable & gameboy.memory.iflag;
-			
-			// disable other interrupts
-			// will be enabled if interrupt handler returns with RETI
-			gameboy.cpu.ime = 0;
-			
-			if (interrupt & 0x01) {
-				// vblank
-				printf("vblank interrupt\n");
-				// disable interrupt
-				gameboy.memory.iflag = gameboy.memory.iflag ^ 0x01;
-				RST_40(&gameboy);
-				
-				gameboy.inDebugMode = true;
-			}
-			
-			continue;
-		}
-	
 		if (gameboy.memory.biosActive) {
 			if (gameboy.cpu.pc == 0x100) {
 				printf("started game rom\n");
-				
 				gameboy.memory.biosActive = false;
-				gameboy.inDebugMode = true;
 			}
 		}
 		else {
-			uint8_t opcode = gb_mem_read(&gameboy.memory, gameboy.cpu.pc);
-		}
-		
-		if (gameboy.inDebugMode) {
-			bool executeNextInstruction = false;
-			
-			gb_print_registers(gameboy);
-			gb_print_disassembly(gameboy, gameboy.cpu.pc, 7);
-			
-			while(!executeNextInstruction) {
-				puts("Please enter a command: ");
-				char input = getchar();
-				getchar(); // consume \n
-				
-				if (input == 'n') {
-					executeNextInstruction = true;
-				}
-				else if(input == 'c') {
-					gameboy.inDebugMode = false;
-					executeNextInstruction = true;
-				}
-				else if(input == 's') {
-					gb_print_stack(&gameboy, 4, 4);
-				}
-				else if (input == 'q') {
-					gameboy.quit = true;
-					gameboy.inDebugMode = false;
-					executeNextInstruction = true;
-				}
-				else {
-					printf("Unkown command '%c', try again.\n", input);
-				}
+			if (gameboy.cpu.pc == 0x21cc) {
+				//gameboy.inDebugMode = true;
+				//printf("exiting vblank handler\n");
 			}
-		}
-	
+			//printf("%04x\n", gameboy.cpu.pc);
+		}	
+		
+		if (gameboy.inDebugMode)
+			gb_debug(&gameboy);
+		
 		uint8_t opcode = gb_mem_read(&gameboy.memory, gameboy.cpu.pc);
 		gameboy.cpu.pc++;
 		
 		instruction_t instr;
 		
 		if (opcode == 0xcb) {
-			// fetch cb instruction from different array
+			// Fetch cb instruction from different array
 			opcode = gb_mem_read(&gameboy.memory, gameboy.cpu.pc);
 			gameboy.cpu.pc++;
 			
@@ -144,20 +100,85 @@ int main() {
 		else {
 			instr.execute(&gameboy);
 		}
-		gb_screen_update(&gameboy.screen, &gameboy.memory);
 		
+		gb_screen_update(&gameboy.screen, &gameboy.memory, instr.cycles);
+		gb_interrupt_handle(&gameboy);
 		
+		printf(BINARY_PATTERN "\n", BYTE_TO_BINARY(gameboy.memory.joyp));
+
 		// SDL stuff
 		SDL_Event e;
-		while (SDL_PollEvent(&e)){
-			if (e.type == SDL_QUIT){
-				gameboy.quit = true;
+		while (SDL_PollEvent(&e)) {
+			switch (e.type)
+			{
+				case SDL_QUIT:
+					gameboy.quit = true;
+					break;
+				
+				case SDL_KEYDOWN:
+					switch (e.key.keysym.sym)
+					{
+						case SDLK_LEFT: 
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_LEFT, GB_JOYPAD_PRESSED);
+							break;
+						case SDLK_RIGHT:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_RIGHT, GB_JOYPAD_PRESSED);
+							break;
+						case SDLK_UP:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_UP, GB_JOYPAD_PRESSED);
+							break;
+						case SDLK_DOWN: 
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_DOWN, GB_JOYPAD_PRESSED);
+							break;
+						case SDLK_LCTRL: 
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_B, GB_JOYPAD_PRESSED);
+							break;
+						case SDLK_SPACE:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_A, GB_JOYPAD_PRESSED);
+							break;
+						case SDLK_q:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_START, GB_JOYPAD_PRESSED);
+							break;
+						case SDLK_w:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_SELECT, GB_JOYPAD_PRESSED);
+							break;
+					}
+					break;
+				case SDL_KEYUP:
+					switch (e.key.keysym.sym)
+					{
+						case SDLK_LEFT: 
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_LEFT, GB_JOYPAD_RELEASED);
+							break;
+						case SDLK_RIGHT:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_RIGHT, GB_JOYPAD_RELEASED);
+							break;
+						case SDLK_UP:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_UP, GB_JOYPAD_RELEASED);
+							break;
+						case SDLK_DOWN: 
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_DOWN, GB_JOYPAD_RELEASED);
+							break;
+						case SDLK_LCTRL: 
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_B, GB_JOYPAD_RELEASED);
+							break;
+						case SDLK_SPACE:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_A, GB_JOYPAD_RELEASED);
+							break;
+						case SDLK_q:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_START, GB_JOYPAD_RELEASED);
+							break;
+						case SDLK_w:
+							gb_joypad_set(&gameboy.memory, GB_JOYPAD_SELECT, GB_JOYPAD_RELEASED);
+							break;
+					}
+					break;
 			}
 		}
 		
 		fpsTimer += SDL_GetTicks() - time;
 		if (fpsTimer >= 16) {
-			fpsTimer = fpsTimer - 16;
+			fpsTimer -= 16;
 			
 			for (int y=0; y<GB_SCREEN_HEIGHT; y++) {
 				for (int x=0; x<GB_SCREEN_WIDTH; x++) {

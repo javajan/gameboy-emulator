@@ -31,9 +31,4 @@ void gb_halt(gameboy_t*);
 void gb_enable_interrupts(gameboy_t*);
 void gb_disable_interrupts(gameboy_t*);
 
-void gb_print_disassembly(gameboy_t, uint16_t, uint16_t);
-void gb_print_stack(gameboy_t*, uint16_t, uint16_t);
-void gb_print_registers(gameboy_t);
-
-
 #endif

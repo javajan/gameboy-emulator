@@ -13,6 +13,9 @@ memory_t gb_init_memory(uint8_t* rom, uint16_t romSize) {
 	memory.ienable = 0;
 	memory.iflag = 0;
 	
+	memory.joyc = 0;
+	memory.joyp = 0xFF;
+	
 	// Load BIOS
 	for (int i = 0; i < MEMORY_SIZE_BIOS; i++) {
 		memory.bios[i] = GB_BOOT_ROM[i];
@@ -121,7 +124,10 @@ void gb_mem_write(memory_t* memory, uint16_t addr, uint8_t val) {
 					}
 					// I/O
 					else {
-						if (addr == 0xFF0F) {
+						if (addr == GB_REGISTER_JOYP) {
+							memory->joyc = val >> 4;
+						}
+						else if (addr == 0xFF0F) {
 							memory->iflag = val;
 						}
 						else {
@@ -203,7 +209,13 @@ uint8_t gb_mem_read(memory_t* memory, uint16_t addr) {
 					}
 					// I/O
 					else {
-						if (addr == 0xFF0F) {
+						if (addr == GB_REGISTER_JOYP) {
+							if (memory->joyc == 1)
+								return memory->joyp & 0x0F; 
+							else
+								return memory->joyp >> 4;
+						}
+						else if (addr == 0xFF0F) {
 							return memory->iflag;
 						}
 						else {

@@ -1,4 +1,7 @@
 
+bin/
+obj/
+roms/
 *.gb
 *.html
 *.wasm

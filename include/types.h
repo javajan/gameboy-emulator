@@ -26,6 +26,9 @@ typedef struct {
 	// interrupt flag register 0xFF0F
 	uint8_t iflag; // 0 vblank, 1 lcd stat, 2 timer, 3 serial, 4 joypad
 	
+	// joypad column
+	uint8_t joyc, joyp;
+	
 	bool biosActive;
 } memory_t;
 

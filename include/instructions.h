@@ -4,6 +4,6 @@
 #include "gameboy.h"
 #include "memory.h"
 
-void RST_40(gameboy_t*);
+void INT(gameboy_t*, uint16_t);
 
 #endif
