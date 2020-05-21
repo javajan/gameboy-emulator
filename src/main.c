@@ -69,7 +69,6 @@ int main() {
 		else {
 			if (gameboy.cpu.pc == 0x21cc) {
 				//gameboy.inDebugMode = true;
-				//printf("exiting vblank handler\n");
 			}
 			//printf("%04x\n", gameboy.cpu.pc);
 		}	
@@ -104,7 +103,7 @@ int main() {
 		gb_screen_update(&gameboy.screen, &gameboy.memory, instr.cycles);
 		gb_interrupt_handle(&gameboy);
 		
-		printf(BINARY_PATTERN "\n", BYTE_TO_BINARY(gameboy.memory.joyp));
+		//printf(BINARY_PATTERN "\n", BYTE_TO_BINARY(gameboy.memory.joyp));
 
 		// SDL stuff
 		SDL_Event e;
